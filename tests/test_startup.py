@@ -46,6 +46,24 @@ class StartupTests(unittest.TestCase):
             with patch.object(a.shutil,'copy2',side_effect=fail):
                 with self.assertRaises(OSError): a.deploy(source,target)
             self.assertEqual((target/'version.txt').read_text(),'old')
+    def test_reopen_running_opens_browser(self):
+        from unittest.mock import patch, MagicMock
+        response = MagicMock()
+        response.__enter__.return_value.status = 200
+        with patch.object(a.urllib.request, 'urlopen', return_value=response), patch.object(a.webbrowser, 'open') as browser:
+            a.reopen_running()
+            browser.assert_called_once_with('http://127.0.0.1:8783')
+
+    def test_repair_uses_base_interpreter_after_renaming_venv(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as t:
+            root=Path(t); runtime=root/'runtime'; runtime.mkdir()
+            venv=runtime/'.venv'; venv.mkdir()
+            (root/'requirements.txt').write_text('example')
+            with patch.object(a, 'ROOT', root), patch.object(a, 'RUNTIME', runtime), patch.object(a, 'VENV', venv), patch.object(a, 'healthy', return_value=False), patch.object(a, 'run') as run, patch.object(a.sys, '_base_executable', 'base-python', create=True):
+                a.prepare()
+                self.assertEqual(run.call_args_list[0].args[0], [a.UV, 'venv', '--python', 'base-python', venv])
+
     def test_bad_environment(self):
         from unittest.mock import patch
         with patch.object(a,'run',side_effect=subprocess.TimeoutExpired('probe',25)):

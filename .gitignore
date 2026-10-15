@@ -1,0 +1,13 @@
+runtime_*/
+logs/
+backups/
+Publicacion GitHub/
+__pycache__/
+*.pyc
+.DS_Store
+Accesos internos/
+tools/gh
+preview.log
+build/
+check-mac/
+check-pc/

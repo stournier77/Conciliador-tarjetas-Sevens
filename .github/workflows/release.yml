@@ -1,0 +1,52 @@
+name: Publicar actualización Mac y Windows
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: publicar-tarjetas
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Preparar versión y fecha
+        id: version
+        run: |
+          python - <<'PY'
+          import os,re
+          from datetime import datetime
+          from pathlib import Path
+          from zoneinfo import ZoneInfo
+          version=Path('version.txt').read_text().strip()
+          assert re.fullmatch(r'\d+\.\d+\.\d+',version)
+          date=datetime.now(ZoneInfo('America/Montevideo')).strftime('%d/%m/%Y')
+          with open(os.environ['GITHUB_OUTPUT'],'a') as f:
+              f.write(f'value={version}\ndate={date}\n')
+          PY
+      - name: Generar y validar paquetes
+        run: |
+          python launchers/Preparar_publicacion.py build
+          python -c "import sys; from pathlib import Path; sys.path.insert(0,'launchers'); from arranque import validate_zip; validate_zip(Path('build/latest_mac.zip'),Path('check-mac')); validate_zip(Path('build/latest_pc.zip'),Path('check-pc'))"
+      - name: Publicar los tres archivos del actualizador
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.value }}
+          target_commitish: ${{ github.sha }}
+          name: Tarjetas ${{ steps.version.outputs.value }} · ${{ steps.version.outputs.date }}
+          make_latest: true
+          fail_on_unmatched_files: true
+          body: |
+            Diseño Sevens aprobado: encabezado celeste, cargas simétricas, logos centrados y barra lateral compacta y fija.
+            Resultados en Documentos/Conciliador Tarjetas/Archivos conciliados/Brex/AAAA-MM-DD.
+            Actualización automática desde los accesos habituales. Conserva históricos, motor, tarjetas y equipos habilitados.
+          files: |
+            build/latest_mac.zip
+            build/latest_pc.zip
+            build/version.txt

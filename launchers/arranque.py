@@ -141,8 +141,9 @@ def prepare():
         return
     print('Reparando entorno Python; los históricos no se modifican.', flush=True)
     # Guardar el entorno anterior en lugar de eliminarlo.
+    base_python = getattr(sys, '_base_executable', None) or sys.executable
     if VENV.exists(): VENV.rename(RUNTIME / ('.venv_anterior_' + str(time.time_ns())))
-    run([UV, 'venv', '--python', sys.executable, VENV])
+    run([UV, 'venv', '--python', base_python, VENV])
     run([UV, 'pip', 'install', '--python', PYTHON, '-r', ROOT / 'requirements.txt'])
     run([PYTHON, '-I', '-c', PROBE], timeout=25)
     (RUNTIME / 'requirements.sha256').write_text(hashlib.sha256((ROOT / 'requirements.txt').read_bytes()).hexdigest())
@@ -176,6 +177,20 @@ def serve():
                 try: process.wait(timeout=5)
                 except subprocess.TimeoutExpired: process.kill(); process.wait()
 
+def reopen_running():
+    print('El conciliador ya está abierto o iniciando. Abriendo su ventana…', flush=True)
+    url = f'http://127.0.0.1:{PORT}'
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(url + '/_stcore/health', timeout=1) as response:
+                if response.status == 200:
+                    webbrowser.open(url)
+                    return
+        except OSError:
+            time.sleep(.5)
+    raise RuntimeError('La instancia anterior sigue iniciando. Revisá el registro de arranque.')
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--install', action='store_true')
@@ -198,7 +213,8 @@ def main():
             import fcntl
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:
-        print('El conciliador ya está abierto o iniciando.'); return
+        reopen_running()
+        return
     if not args.no_update and update():
         # Ejecutar código nuevo tras liberar el bloqueo.
         lock.close()

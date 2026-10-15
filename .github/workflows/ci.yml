@@ -19,6 +19,17 @@ jobs:
           cache: pip
       - run: python -m pip install -r requirements.txt
       - run: python -m unittest discover -s tests -p 'test_*.py'
+      - name: Probar arranque PowerShell con error de intérprete y reapertura
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $python = (python -c "import sys; print(sys.executable)")
+          & ./tests/test_pc_launcher.ps1 -Python $python
+          $source = [IO.File]::ReadAllText((Join-Path $pwd 'Reparar_Inicio_Tarjetas_PC.bat'))
+          $code = ($source -split '(?m)^#SEVENS_POWERSHELL\r?$',2)[1]
+          $tokens = $null; $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseInput($code,[ref]$tokens,[ref]$errors)
+          if ($errors.Count) { throw ($errors | Out-String) }
       - name: Compilar programa y lanzadores
         run: python -m compileall -q app launchers
       - name: Generar y validar ambos paquetes

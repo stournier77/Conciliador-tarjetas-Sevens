@@ -19,14 +19,8 @@ try {
         Remove-Item $script
         if (-not (Test-Path $Uv)) { throw 'No se instaló uv.' }
     }
-    $Python = (& $Uv python find --managed-python 3.12 2>$null)
-    if ($LASTEXITCODE -ne 0) {
-        & $Uv python install --no-bin --no-registry 3.12
-        if ($LASTEXITCODE -ne 0) { throw 'No se instaló Python.' }
-        $Python = (& $Uv python find --managed-python 3.12)
-        if ($LASTEXITCODE -ne 0) { throw 'No se encontró Python.' }
-    }
-    $Python = ([string]$Python).Trim()
+    . (Join-Path $Root 'launchers\python_pc.ps1')
+    $Python = Get-SevensPython -Uv $Uv -Runtime $Runtime
     & $Python (Join-Path $Root 'launchers\arranque.py') @args
     if ($LASTEXITCODE -ne 0) { throw 'Falló el inicio; revisá logs.' }
 } catch { Write-Host $_; Read-Host 'Enter para cerrar'; exit 1 }

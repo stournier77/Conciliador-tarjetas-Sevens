@@ -14,8 +14,9 @@ import pandas as pd
 
 
 def fixture_bytes():
+    # Datos ficticios: número compuesto por ceros; no contiene datos de clientes ni tarjetas reales.
     brex = pd.DataFrame([{"Swipe Time (UTC)": "2026-10-01T12:00:00Z", "Amount": 123.45, "Statement Descriptor": "IBERIA", "Merchant Name": "IBERIA", "Brex Category": "Airline expenses", "Type": "TRANSACTION", "Last 4": "4210", "Id": "PRUEBA-DISENO"}])
-    maveric = pd.DataFrame([[datetime(2026, 10, 1), "075-1234567890", None, None, None, "PASAJERO DE PRUEBA", "+CC1:5495610076204210/ABC123", 123.45, None, 12345]])
+    maveric = pd.DataFrame([[datetime(2026, 10, 1), "075-"+"0"*10, None, None, None, "PASAJERO DE PRUEBA", "+CC1:"+"0"*12+"4210/TEST", 123.45, None, 12345]])
     b, m = io.BytesIO(), io.BytesIO()
     with pd.ExcelWriter(b, engine="openpyxl") as w:
         brex.to_excel(w, sheet_name="Transactions", index=False)
@@ -28,7 +29,7 @@ class DesignPathsTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d, patch("paths.documents_folder", return_value=Path(d)):
             now = datetime(2026, 10, 15, 10, 20, 30, 123456)
             folder, name = output_destination(date(2026, 10, 1), date(2026, 10, 14), now)
-            self.assertEqual(folder, Path(d) / "Conciliador Tarjetas/Archivos conciliados/Brex/2026-10-15")
+            self.assertEqual(folder, Path(d) / "App Conciliador Tarjetas Maveric/archivos conciliados/Brex")
             self.assertIn("2026-10-01_al_2026-10-14", name)
             self.assertNotEqual(name, output_destination(date(2026, 10, 1), date(2026, 10, 14), now.replace(microsecond=123457))[1])
             folder.mkdir(parents=True)
@@ -59,12 +60,12 @@ class DesignPathsTests(unittest.TestCase):
             self.assertTrue(app.success)
             outputs = list(Path(d).rglob("*.xlsx"))
             self.assertEqual(len(outputs), 1)
-            self.assertIn("Archivos conciliados/Brex", outputs[0].as_posix())
+            self.assertIn("archivos conciliados/Brex", outputs[0].as_posix())
             self.assertEqual(pd.read_excel(outputs[0], sheet_name="LEFITUR").iloc[0]["Estado"], "OK")
 
     def test_interface_loads_with_required_controls(self):
         from streamlit.testing.v1 import AppTest
-        with patch("authorized_devices.authorization", return_value=(True, "TEST", {"name":"Equipo de prueba","role":"user"})):
+        with tempfile.TemporaryDirectory() as d, patch("paths.documents_folder",return_value=Path(d)), patch("authorized_devices.authorization", return_value=(True, "TEST", {"name":"Equipo de prueba","role":"user"})):
             app = AppTest.from_file(str(ROOT / "app/main.py"), default_timeout=15).run()
         self.assertFalse(app.exception)
         self.assertTrue(next(b for b in app.button if b.label == "GENERAR CONCILIACIÓN").disabled)

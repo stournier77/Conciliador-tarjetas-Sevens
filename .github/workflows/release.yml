@@ -44,7 +44,8 @@ jobs:
           fail_on_unmatched_files: true
           body: |
             Diseño Sevens aprobado: encabezado celeste, cargas simétricas, logos centrados y barra lateral compacta y fija.
-            Resultados en Documentos/Conciliador Tarjetas/Archivos conciliados/Brex/AAAA-MM-DD.
+            Resultados en Documentos/App Conciliador Tarjetas Maveric/archivos conciliados/Brex.
+            Selector de archivos desde la carpeta de la aplicación.
             Actualización automática desde los accesos habituales. Conserva históricos, motor, tarjetas y equipos habilitados.
           files: |
             build/latest_mac.zip

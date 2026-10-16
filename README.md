@@ -41,3 +41,5 @@ El panel izquierdo abre expandido y el control para ocultarlo se deshabilita par
 El lanzador usa primero el Python válido del entorno instalado. La búsqueda de Python administrado captura stdout, stderr y el código de salida sin que PowerShell 5.1 interrumpa el flujo al informar un intérprete ausente; si hace falta lo instala automáticamente. Si el programa sigue abierto, el acceso vuelve a abrir su ventana. La reconstrucción del entorno usa el intérprete base antes de renombrar la venv anterior.
 
 Para equipos cuyo lanzador anterior no llega a comprobar actualizaciones, ejecutar una vez Reparar_Inicio_Tarjetas_PC.bat. Descarga el paquete oficial, verifica SHA256, respalda y reemplaza únicamente el lanzador de Windows y su auxiliar; después abre el acceso y deja que actualice el resto del programa. No modifica conciliaciones ni resultados.
+
+Resultados en Documentos/App Conciliador Tarjetas Maveric/archivos conciliados. El selector de escritorio abre la carpeta de esta aplicación en Mac y Windows; se mantiene arrastrar archivos. Los históricos de la carpeta anterior se copian sin borrar originales ni sobrescribir.

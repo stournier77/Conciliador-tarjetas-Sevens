@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 APP_NAME = "Conciliador de Tarjetas - Maveric"
-APP_VERSION = "0.4.3"
+APP_VERSION = "0.4.4"
 APP_DATE = "16/10/2026"
 INSTALL_FOLDER_NAME = "App Conciliador Tarjetas Maveric"
 OUTPUT_FOLDER_NAME = "Archivos conciliados"
